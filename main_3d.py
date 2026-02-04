@@ -2,10 +2,10 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 from src import Warehouse, Robot, CSpace3D, MAPS
-from src.pathfinder3d import Pathfinder3D as AStar3D
-from src.pathfinder3d_dijkstra import Pathfinder3D_Dijkstra as Dijkstra3D
-from src.pathfinder3d_rrt import Pathfinder3D_RRT as RRT3D
-from src.pathfinder3d_prm import Pathfinder3D_PRM as PRM3D
+from src.planning3d import Pathfinder3D as AStar3D
+from src.planning3d import Pathfinder3D_Dijkstra as Dijkstra3D
+from src.planning3d import Pathfinder3D_RRT as RRT3D
+from src.planning3d import Pathfinder3D_PRM as PRM3D
 
 RESOLUTION = 0.5
 N_ANGLES = 12
