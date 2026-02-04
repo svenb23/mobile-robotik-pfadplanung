@@ -1,43 +1,30 @@
 import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.patches import Polygon as MplPolygon
 from shapely.geometry import Polygon
 from typing import List, Tuple
 
 
 class Robot:
-    """Robot geometry as polygon."""
+    """Robot geometry defined by polygon vertices centered at origin."""
 
     def __init__(self, vertices: List[Tuple[float, float]]):
         self.vertices = vertices
         self.polygon = Polygon(vertices)
 
-    def at(self, x: float, y: float) -> Polygon:
-        translated = [(vx + x, vy + y) for vx, vy in self.vertices]
-        return Polygon(translated)
-
-    def visualize(self, ax=None, position: Tuple[float, float] = (0, 0)):
-        if ax is None:
-            fig, ax = plt.subplots(figsize=(6, 6))
-
-        translated = [(vx + position[0], vy + position[1]) for vx, vy in self.vertices]
-        patch = MplPolygon(translated, facecolor='#2E86AB', edgecolor='black', alpha=0.8)
-        ax.add_patch(patch)
-        ax.plot(position[0], position[1], 'ko', markersize=4)
-
-        ax.set_aspect('equal')
-        ax.grid(True, alpha=0.3)
-        return ax
-
-    @classmethod
-    def circle(cls, radius: float, n_points: int = 16) -> 'Robot':
-        """Creates a circular robot approximated by polygon."""
-        angles = np.linspace(0, 2 * np.pi, n_points, endpoint=False)
-        vertices = [(radius * np.cos(a), radius * np.sin(a)) for a in angles]
-        return cls(vertices)
+    def at(self, x: float, y: float, theta: float = 0) -> Polygon:
+        """Return robot polygon at position (x,y) with rotation theta."""
+        if theta == 0:
+            transformed = [(vx + x, vy + y) for vx, vy in self.vertices]
+        else:
+            # Rotation matrix: [cos -sin; sin cos]
+            cos_t, sin_t = np.cos(theta), np.sin(theta)
+            transformed = [
+                (vx * cos_t - vy * sin_t + x, vx * sin_t + vy * cos_t + y)
+                for vx, vy in self.vertices
+            ]
+        return Polygon(transformed)
 
     @classmethod
     def rectangle(cls, width: float, height: float) -> 'Robot':
-        """Creates a rectangular robot centered at origin."""
+        """Create rectangular robot centered at origin."""
         w, h = width / 2, height / 2
         return cls([(-w, -h), (w, -h), (w, h), (-w, h)])
