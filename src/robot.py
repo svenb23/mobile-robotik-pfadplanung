@@ -28,3 +28,19 @@ class Robot:
         """Create rectangular robot centered at origin."""
         w, h = width / 2, height / 2
         return cls([(-w, -h), (w, -h), (w, h), (-w, h)])
+
+    @classmethod
+    def circle(cls, radius: float, n_points: int = 16) -> 'Robot':
+        """Create circular robot centered at origin (approximated as polygon)."""
+        angles = np.linspace(0, 2 * np.pi, n_points, endpoint=False)
+        vertices = [(radius * np.cos(a), radius * np.sin(a)) for a in angles]
+        return cls(vertices)
+
+    @classmethod
+    def triangle(cls, base: float, height: float) -> 'Robot':
+        """Create triangular robot centered at origin (pointing forward)."""
+        return cls([
+            (height / 2, 0),          
+            (-height / 2, -base / 2),  
+            (-height / 2, base / 2),   
+        ])

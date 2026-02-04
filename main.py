@@ -7,7 +7,7 @@ ALGORITHMS = ["a_star", "dijkstra", "best_first", "rrt", "prm"]
 ROBOTS = {
     "circle": Robot.circle(0.5),
     "rectangle": Robot.rectangle(0.8, 0.5),
-    "triangle": Robot([(0, -0.4), (0.5, 0.3), (-0.5, 0.3)]),
+    "triangle": Robot.triangle(0.8, 0.6),
 }
 RESOLUTION = 0.3
 
