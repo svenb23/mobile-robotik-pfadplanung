@@ -180,8 +180,29 @@ Abschließend werden die Projektergebnisse kritisch reflektiert und Verbesserung
 
 \section{Hauptteil}
 \subsection{Projektumgebung}
-\subsection{Iterativer Analyseansatz}
-\subsection{2D}
+Zu Beginn des Projekts wurde ein GitHub-Repository\footnote{\url{https://github.com/svenb23/mobile-robotik-pfadplanung}} angelegt, 
+um eine nachvollziehbare Versionsverwaltung zu gewährleisten. Anschließend wurde eine virtuelle Python-Umgebung
+mit \texttt{venv} eingerichtet, in der alle projektspezifischen Abhängigkeiten isoliert
+installiert wurden. Als Implementierungssprache wurde Python gewählt, da der Autor hier über
+die meiste Erfahrung verfügt.
+
+\subsection{Zwei-Phasen-Analyseansatz}
+Nach dem Einrichten der Projektstruktur wurde die Entwicklung in zwei aufeinander aufbauende
+Phasen gegliedert. Diese Vorgehensweise ermöglichte es, zunächst die grundlegenden Konzepte
+der Pfadplanung im einfacheren Fall zu validieren, bevor die Komplexität erhöht wurde.
+
+In der ersten Phase wurde die Pfadplanung für omnidirektionale Roboter implementiert. Bei diesem
+Robotertyp kann sich der Roboter in jede Richtung bewegen, ohne seine Orientierung ändern zu müssen.
+Der resultierende Konfigurationsraum ist zweidimensional und umfasst lediglich die Position $(x, y)$
+des Roboters. 
+
+Die zweite Phase erweiterte das System um die Berücksichtigung der Roboter\-orientierung. Für
+nicht-holonome Roboter, die sich nicht seitwärts bewegen können, ist die Orientierung $\theta$
+eine zusätzliche Freiheitsdimension. Der Konfigurationsraum wird dadurch dreidimensional $(x, y, \theta)$,
+was die Komplexität der Kollisionsprüfung und Pfadsuche erheblich steigert. Durch den modularen
+Aufbau der ersten Phase konnten wesentliche Komponenten wiederverwendet und gezielt erweitert werden.
+
+\subsection{2D-Pfadplanung}
 \subsection{3D}
 
 \section{Fazit}
