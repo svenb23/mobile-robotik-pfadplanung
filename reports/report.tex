@@ -133,7 +133,10 @@ Mobile Robotik DLBROESR01\_D \par}
 \section*{Abkürzungsverzeichnis}
 \addcontentsline{toc}{section}{Abkürzungsverzeichnis}
 \begin{acronym}[C-Space]
+    \acro{AMR}{Automated Mobile Robot}
     \acro{C-Space}{Configuration Space}
+    \acro{PRM}{Probabilistic Roadmap}
+    \acro{RRT}{Rapidly-exploring Random Tree}
 \end{acronym}
 \newpage
 
@@ -141,6 +144,40 @@ Mobile Robotik DLBROESR01\_D \par}
 \setcounter{page}{1}
 
 \section{Einleitung}
+Die Intralogistik befindet sich in einem tiefgreifenden Wandel. Angetrieben durch die steigende
+Kundenerwartungen an Liefergeschwindigkeit setzen immer mehr Unternehmen auf automatisierte
+mobile Roboter (\ac{AMR}) für den innerbetrieblichen Warentransport \parencite{fragapane2021amr}. 
+Eine zentrale Herausforderung beim Einsatz solcher Systeme stellt die Pfadplanung dar: Der Roboter muss 
+in der Lage sein, kollisionsfrei von einem Startpunkt zu einem Zielpunkt zu navigieren und dabei sowohl 
+statische Hindernisse als auch die eigene Geometrie zu berücksichtigen. Vor diesem Hintergrund wurde im
+Rahmen des Moduls \enquote{Mobile Robotik} an der IU Internationalen Hochschule ein Softwareprototyp
+entwickelt, der verschiedene etablierte Pfadplanungsalgorithmen implementiert und vergleichend evaluiert.
+
+Das primäre Projektziel bestand in der Implementierung eines Softwaresystems, das für einen omnidirektionalen 
+Roboter in einer polygonbasierten Lagerumgebung kollisionsfreie Pfade berechnet. Die zentrale Forschungsfrage 
+konzentrierte sich darauf, wie verschiedene Pfadplanungsalgorithmen hinsichtlich Pfadqualität, Rechenzeit und 
+Robustheit in unterschiedlich komplexen Umgebungen performieren. Besondere Aufmerksamkeit galt dabei der 
+korrekten Konstruktion des Konfigurationsraums (\ac{C-Space}), der die Robotergeometrie in die Hindernisdarstellung 
+integriert.
+
+Die methodische Vorgehensweise gliederte sich in mehrere aufeinander aufbauende Phasen. Zunächst wurde eine 
+modulare Softwarearchitektur in Python entwickelt, die eine klare Trennung zwischen Umgebungsmodellierung, 
+Robotergeometrie, Konfigurationsraumberechnung und Pfadplanung vorsieht. Anschließend wurden fünf verschiedene 
+Algorithmen implementiert und verglichen: Die graphbasierten Verfahren A*, Dijkstra und Best-First-Search sowie 
+die samplingbasierten Methoden \ac{RRT} und \ac{PRM}. Die Evaluation erfolgte auf drei Testumgebungen mit 
+steigender Komplexität unter Verwendung von drei unterschiedlichen Robotergeometrien.
+
+Der gewählte Ansatz zeichnet sich durch seine Erweiterbarkeit aus. Neben dem zweidimensionalen \ac{C-Space} für 
+omnidirektionale Roboter wurde zusätzlich ein dreidimensionaler Konfigurationsraum implementiert, der die Orientierung 
+des Roboters als dritte Dimension berücksichtigt. Dies ermöglicht die Pfadplanung für nicht-holonome Roboter 
+und demonstriert die Skalierbarkeit des entwickelten Systems. Durch die systematische Evaluation verschiedener 
+Algorithmus-Roboter-Umgebungs-Kombinationen wurden quantitative Erkenntnisse gewonnen, die als Entscheidungsgrundlage 
+für den praktischen Einsatz dienen können.
+
+Die vorliegende Fallstudie gliedert sich wie folgt: Nach der Beschreibung der Projektumgebung wird der iterative 
+Entwicklungsansatz erläutert. Die Hauptabschnitte behandeln die 2D- und 3D-Pfadplanung mit ihren jeweiligen Ergebnissen. 
+Abschließend werden die Projektergebnisse kritisch reflektiert und Verbesserungspotenziale aufgezeigt.
+
 \section{Hauptteil}
 \subsection{Projektumgebung}
 \subsection{Iterativer Analyseansatz}
