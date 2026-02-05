@@ -203,19 +203,32 @@ was die Komplexität der Kollisionsprüfung und Pfadsuche erheblich steigert. Du
 Aufbau der ersten Phase konnten wesentliche Komponenten wiederverwendet und gezielt erweitert werden.
 
 \subsection{2D-Pfadplanung}
-\subsection{Umgebungsmodellierung}
-\subsection{Robotergeometrie}
-\subsection{Konfigurationsraumberechnung}
-\subsection{Pfadplanungsalgorithmen}
-\subsection{Evaluation}
+\subsubsection{Umgebungsmodellierung}
+Die Lagerumgebung wird durch eine rechteckige Grundfläche mit polygonalen Hindernissen modelliert.
+Jedes Hindernis ist als Liste von Eckpunkten definiert, die ein geschlossenes Polygon bilden.
+Diese Repräsentation ermöglicht eine flexible Darstellung beliebiger konvexer und konkaver
+Hindernisformen.
+
+Für die Evaluation wurden drei Testumgebungen mit steigender Komplexität erstellt. Die
+\textit{easy}-Umgebung umfasst eine Fläche von $20 \times 15$ Metern mit zwei rechteckigen
+Hindernissen, die einen einfachen Umweg erfordern. Die \textit{medium}-Umgebung erweitert
+die Fläche auf $25 \times 20$ Meter und enthält sechs Hindernisse, die korridorartige
+Strukturen bilden. Die \textit{hard}-Umgebung stellt mit $30 \times 25$ Metern und 14
+Hindernissen eine labyrinthartige Struktur dar, die deutlich komplexere Pfade erfordert
+(siehe \cref{fig:maps_overview} im Anhang).
+
+\subsubsection{Robotergeometrie}
+\subsubsection{Konfigurationsraumberechnung}
+\subsubsection{Pfadplanungsalgorithmen}
+\subsubsection{Evaluation}
 
 
 \subsection{3D}
-\subsection{Umgebungsmodellierung}
-\subsection{Robotergeometrie}
-\subsection{Konfigurationsraumberechnung}
-\subsection{Pfadplanungsalgorithmen}
-\subsection{Evaluation}
+\subsubsection{Umgebungsmodellierung}
+\subsubsection{Robotergeometrie}
+\subsubsection{Konfigurationsraumberechnung}
+\subsubsection{Pfadplanungsalgorithmen}
+\subsubsection{Evaluation}
 
 
 \section{Fazit}
@@ -240,5 +253,12 @@ Der vollständige Quellcode ist im GitHub-Repository verfügbar: \url{https://gi
 \appendix
 \section*{Anhang}
 \addcontentsline{toc}{section}{Anhang}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{../figures/maps_overview.png}
+    \caption{Übersicht der drei Testumgebungen: easy (links), medium (Mitte), hard (rechts)}
+    \label{fig:maps_overview}
+\end{figure}
 
 \end{document}
