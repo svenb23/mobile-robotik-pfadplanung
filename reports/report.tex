@@ -218,6 +218,20 @@ Hindernissen eine labyrinthartige Struktur dar, die deutlich komplexere Pfade er
 (siehe \cref{fig:maps_overview} im Anhang).
 
 \subsubsection{Robotergeometrie}
+Der Roboter wird als Polygon modelliert, dessen Eckpunkte relativ zum Ursprung definiert sind.
+Diese Darstellung ermöglicht eine einheitliche Behandlung beliebiger Roboterformen bei der
+Kollisionsprüfung. Die Methode \texttt{at(x, y, theta)} transformiert das Roboterpolygon
+an eine beliebige Position mit optionaler Rotation.
+
+Für die Evaluation wurden drei unterschiedliche Geometrien implementiert. Der kreisförmige
+Roboter mit einem Radius von 0,5 Metern wird als 16-Eck approximiert und repräsentiert einen
+omnidirektionalen Roboter ohne bevorzugte Ausrichtung. Der rechteckige Roboter mit den
+Abmessungen $0{,}8 \times 0{,}5$ Meter entspricht einem typischen Transportroboter.
+Der dreieckige Roboter mit einer Basis von 0,8 Metern und einer Höhe von 0,6 Metern
+zeigt mit seiner Spitze nach vorne, kann sich jedoch als omnidirektionaler Roboter
+in alle Richtungen bewegen. Diese asymmetrische Form verdeutlicht den Einfluss der
+Geometrie auf den Konfigurationsraum (siehe \cref{fig:robot_geometries} im Anhang).
+
 \subsubsection{Konfigurationsraumberechnung}
 \subsubsection{Pfadplanungsalgorithmen}
 \subsubsection{Evaluation}
@@ -259,6 +273,13 @@ Der vollständige Quellcode ist im GitHub-Repository verfügbar: \url{https://gi
     \includegraphics[width=\textwidth]{../figures/maps_overview.png}
     \caption{Übersicht der drei Testumgebungen: easy (links), medium (Mitte), hard (rechts)}
     \label{fig:maps_overview}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{../figures/robot_geometries.png}
+    \caption{Die drei Robotergeometrien: Kreis (links), Rechteck (Mitte), Dreieck (rechts)}
+    \label{fig:robot_geometries}
 \end{figure}
 
 \end{document}
