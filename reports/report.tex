@@ -233,6 +233,23 @@ in alle Richtungen bewegen. Diese asymmetrische Form verdeutlicht den Einfluss d
 Geometrie auf den Konfigurationsraum (siehe \cref{fig:robot_geometries} im Anhang).
 
 \subsubsection{Konfigurationsraumberechnung}
+Der Konfigurationsraum (\ac{C-Space}) transformiert das Pfadplanungsproblem von einem
+ausgedehnten Roboter zu einem Punktroboter. Dabei werden die Hindernisse um die
+Robotergeometrie erweitert, sodass eine Kollisionsprüfung nur noch für den Referenzpunkt
+des Roboters erforderlich ist.
+
+Die Berechnung erfolgt durch Diskretisierung des Arbeitsraums in ein gleichmäßiges Gitter
+mit konfigurierbarer Auflösung (Standard: 0,5 Meter). Für jede Gitterzelle wird das
+Roboterpolygon an der entsprechenden Position platziert und mittels der Shapely-Bibliothek
+\parencite{shapely2024} auf Überschneidungen mit den Hindernissen geprüft. Zusätzlich wird sichergestellt, dass
+der Roboter vollständig innerhalb der Umgebungsgrenzen liegt. Das Ergebnis ist ein
+boolesches 2D-Array, in dem besetzte Zellen als \texttt{True} und freie Zellen als
+\texttt{False} markiert sind.
+
+Durch diese Vorverarbeitung reduziert sich die Pfadplanung auf eine Graphsuche im
+diskretisierten Gitter. Die gewählte Auflösung stellt einen Kompromiss zwischen
+Genauigkeit und Rechenaufwand dar (siehe \cref{fig:cspace_comparison} im Anhang).
+
 \subsubsection{Pfadplanungsalgorithmen}
 \subsubsection{Evaluation}
 
@@ -280,6 +297,13 @@ Der vollständige Quellcode ist im GitHub-Repository verfügbar: \url{https://gi
     \includegraphics[width=0.8\textwidth]{../figures/robot_geometries.png}
     \caption{Die drei Robotergeometrien: Kreis (links), Rechteck (Mitte), Dreieck (rechts)}
     \label{fig:robot_geometries}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{../figures/cspace_comparison.png}
+    \caption{Konfigurationsräume für verschiedene Robotergeometrien: Die grauen Bereiche zeigen die erweiterten Hindernisse}
+    \label{fig:cspace_comparison}
 \end{figure}
 
 \end{document}
