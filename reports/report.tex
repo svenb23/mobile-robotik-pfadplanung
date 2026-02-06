@@ -336,6 +336,17 @@ Orientierungen evaluiert werden müssen. Das Ergebnis ist ein dreidimensionales
 boolesches Array, das die Befahrbarkeit jeder Konfiguration angibt.
 
 \subsubsection{Pfadplanungsalgorithmen}
+Für die 3D-Pfadplanung wurden vier Algorithmen implementiert: A*, Dijkstra, \ac{RRT}
+und \ac{PRM}. Die graphbasierten Verfahren A* und Dijkstra operieren auf dem 3D-Gitter
+mit einer erweiterten Nachbarschaftsdefinition: Neben der 8-Nachbarschaft in der
+xy-Ebene werden für jede Position drei Optionen für die Orientierung berücksichtigt
+(unverändert, +30°, -30°).
+
+Die samplingbasierten Verfahren \ac{RRT} und \ac{PRM} wurden für den dreidimensionalen
+Raum $(x, y, \theta)$ angepasst. Bei der Bewegung zwischen zwei Konfigurationen wird
+sowohl die räumliche Distanz als auch die Winkeländerung interpoliert und auf
+Kollisionsfreiheit geprüft.
+
 \subsubsection{Evaluation}
 
 
