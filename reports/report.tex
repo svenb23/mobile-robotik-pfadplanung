@@ -324,6 +324,17 @@ nur minimalen Einfluss auf den Algorithmusvergleich hat, weshalb für die 3D-Pfa
 auf die Variation der Roboterformen verzichtet wurde.
 
 \subsubsection{Konfigurationsraumberechnung}
+Der dreidimensionale Konfigurationsraum erweitert die 2D-Repräsentation um die
+Orientierung $\theta$ als dritte Dimension. Die Diskretisierung erfolgt mit einer
+räumlichen Auflösung von 0,5 Metern und 12 Winkelschritten, was einer Winkelauflösung
+von 30° entspricht.
+
+Für jede Kombination aus Position $(x, y)$ und Orientierung $\theta$ wird das
+rotierte Roboterpolygon auf Kollisionen mit Hindernissen und Umgebungsgrenzen geprüft.
+Die Berechnung ist rechenintensiver als im 2D-Fall, da für jeden Gitterpunkt zwölf
+Orientierungen evaluiert werden müssen. Das Ergebnis ist ein dreidimensionales
+boolesches Array, das die Befahrbarkeit jeder Konfiguration angibt.
+
 \subsubsection{Pfadplanungsalgorithmen}
 \subsubsection{Evaluation}
 
