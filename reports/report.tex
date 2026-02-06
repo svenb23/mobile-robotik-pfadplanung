@@ -310,9 +310,19 @@ Die Robotergeometrie hatte hingegen nur minimalen Einfluss auf die Performance,
 da die Kollisionsprüfung durch den vorberechneten Konfigurationsraum effizient erfolgt
 (siehe \cref{tab:results_2d} im Anhang).
 
-\subsection{3D}
+\subsection{3D-Pfadplanung}
 \subsubsection{Umgebungsmodellierung}
+Für die 3D-Pfadplanung wurde die \textit{hard}-Umgebung aus der 2D-Evaluation wiederverwendet.
+Diese Wahl ermöglicht einen direkten Vergleich der Ergebnisse und demonstriert die erhöhte
+Komplexität durch die zusätzliche Orientierungsdimension in einer bereits anspruchsvollen
+Umgebung.
+
 \subsubsection{Robotergeometrie}
+Als Robotergeometrie wurde ausschließlich ein rechteckiger Roboter mit den Abmessungen
+$1{,}0 \times 0{,}5$ Meter verwendet. Die 2D-Evaluation zeigte, dass die Robotergeometrie
+nur minimalen Einfluss auf den Algorithmusvergleich hat, weshalb für die 3D-Pfadplanung
+auf die Variation der Roboterformen verzichtet wurde.
+
 \subsubsection{Konfigurationsraumberechnung}
 \subsubsection{Pfadplanungsalgorithmen}
 \subsubsection{Evaluation}
@@ -401,6 +411,29 @@ hard & Dijkstra & 53,12 & 164 & 0,023 \\
 hard & Best-First & 58,80 & 185 & 0,012 \\
 hard & RRT & 62,02 & 126 & 0,414 \\
 hard & PRM & 55,04 & 22 & 0,045 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{../figures/cspace3d_comparison.png}
+    \caption{3D-Konfigurationsraum mit Pfaden der vier Algorithmen: Die Hindernisse erstrecken sich als vertikale Wände durch alle Orientierungen}
+    \label{fig:cspace3d_comparison}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Evaluationsergebnisse der 3D-Pfadplanung (rechteckiger Roboter, \textit{hard}-Umgebung)}
+\label{tab:results_3d}
+\begin{tabular}{lrrr}
+\toprule
+Algorithmus & Pfadlänge [m] & Wegpunkte & Zeit [s] \\
+\midrule
+A* & 66,50 & -- & 0,74 \\
+Dijkstra & 66,50 & -- & 0,68 \\
+RRT & 79,30 & -- & 8,69 \\
+PRM & 72,70 & -- & 0,22 \\
 \bottomrule
 \end{tabular}
 \end{table}
