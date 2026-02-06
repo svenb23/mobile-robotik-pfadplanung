@@ -251,6 +251,38 @@ diskretisierten Gitter. Die gewählte Auflösung stellt einen Kompromiss zwische
 Genauigkeit und Rechenaufwand dar (siehe \cref{fig:cspace_comparison} im Anhang).
 
 \subsubsection{Pfadplanungsalgorithmen}
+Für die Pfadsuche wurden fünf Algorithmen aus zwei Kategorien implementiert: graphbasierte
+und samplingbasierte Verfahren.
+
+Die graphbasierten Algorithmen arbeiten auf dem diskretisierten Konfigurationsraum und nutzen
+die pathfinding-Bibliothek. A* bewertet jeden Knoten nach der Summe $f(n) = g(n) + h(n)$,
+wobei $g(n)$ die tatsächlichen Kosten vom Start und $h(n)$ eine heuristische Schätzung zum
+Ziel darstellt. Der Algorithmus expandiert stets den Knoten mit dem niedrigsten $f$-Wert
+und findet garantiert den kürzesten Pfad bei zulässiger Heuristik
+\parencite[vgl.][S. 312--314]{lynch2017modern}. Dijkstra ist ein Spezialfall von A* mit
+$h(n) = 0$ und expandiert Knoten ausschließlich nach ihren bisherigen Kosten $g(n)$
+\parencite[vgl.][S. 314]{lynch2017modern}. Dies liefert ebenfalls optimale Pfade, exploriert
+jedoch mehr Knoten, da keine Richtungsinformation zum Ziel genutzt wird. Best-First-Search
+verwendet ausschließlich die Heuristik $h(n)$ und ignoriert die bisherigen Kosten. Dadurch
+findet der Algorithmus schnell einen Pfad zum Ziel, dieser ist jedoch nicht zwangsläufig
+optimal. Alle drei Algorithmen erlauben diagonale Bewegungen im Gitter und sind
+vollständig, das heißt sie finden garantiert eine Lösung, sofern eine existiert.
+
+Die samplingbasierten Algorithmen wurden eigenständig implementiert und arbeiten im
+kontinuierlichen Raum. \ac{RRT} baut einen Baum ausgehend vom Startpunkt auf. In jeder
+Iteration wird ein zufälliger Punkt im Raum gesampelt, der nächste Knoten im Baum bestimmt
+und ein neuer Knoten in Richtung des Samples mit einer festen Schrittweite (0,5 Meter)
+hinzugefügt. Eine Zielgewichtung von 10\% sorgt dafür, dass der Baum gezielt zum Ziel wächst
+\parencite[vgl.][S. 324--325]{lynch2017modern}. \ac{PRM} arbeitet in zwei Phasen: Zunächst
+werden 500 zufällige, kollisionsfreie Punkte im Raum verteilt. Anschließend wird jeder Punkt
+mit seinen 10 nächsten Nachbarn verbunden, sofern die Verbindung kollisionsfrei ist. Die
+Pfadsuche erfolgt mittels A* auf diesem vorberechneten Graphen
+\parencite[vgl.][S. 328--330]{lynch2017modern}. Beide Verfahren sind probabilistisch
+vollständig: Mit zunehmender Anzahl an Samples konvergiert die Wahrscheinlichkeit,
+eine existierende Lösung zu finden, gegen eins. Sie eignen sich besonders für
+hochdimensionale Konfigurationsräume
+(siehe \cref{fig:algorithm_comparison} im Anhang).
+
 \subsubsection{Evaluation}
 
 
@@ -304,6 +336,13 @@ Der vollständige Quellcode ist im GitHub-Repository verfügbar: \url{https://gi
     \includegraphics[width=\textwidth]{../figures/cspace_comparison.png}
     \caption{Konfigurationsräume für verschiedene Robotergeometrien: Die grauen Bereiche zeigen die erweiterten Hindernisse}
     \label{fig:cspace_comparison}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{../figures/algorithm_comparison.png}
+    \caption{Vergleich der Pfadplanungsalgorithmen: Unterschiedliche Strategien führen zu verschiedenen Pfadverläufen}
+    \label{fig:algorithm_comparison}
 \end{figure}
 
 \end{document}
