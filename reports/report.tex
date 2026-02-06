@@ -348,7 +348,24 @@ sowohl die räumliche Distanz als auch die Winkeländerung interpoliert und auf
 Kollisionsfreiheit geprüft.
 
 \subsubsection{Evaluation}
+Die Evaluation wurde mit einem Startpunkt bei $(1, 1, 0°)$ und einem Zielpunkt
+bei $(7, 2, 180°)$ durchgeführt. Diese Konfiguration erfordert nicht nur eine
+räumliche Navigation durch die Hindernisse, sondern auch eine Drehung des
+Roboters um 180°.
 
+A* und Dijkstra fanden optimale Pfade mit einer Länge von 66,5 Metern bei
+Rechenzeiten von 0,74 bzw. 0,68 Sekunden. \ac{RRT} benötigte mit 8,69 Sekunden
+deutlich mehr Rechenzeit und lieferte einen längeren Pfad von 79,3 Metern.
+\ac{PRM} erzielte mit 72,7 Metern und 0,22 Sekunden einen guten Kompromiss
+zwischen Pfadqualität und Rechenzeit.
+
+Obwohl samplingbasierte Verfahren theoretisch besser mit höheren Dimensionen
+skalieren \parencite[vgl.][S. 1]{petrovic2018motion}, zeigt sich dieser Vorteil
+bei nur drei Dimensionen noch nicht deutlich.
+Die graphbasierten Verfahren profitieren hier von der noch handhabbaren Gittergröße.
+In strukturierten Umgebungen mit engen Korridoren haben samplingbasierte Verfahren
+zudem Schwierigkeiten, da zufällige Samples selten die schmalen Durchgänge treffen
+(siehe \cref{fig:cspace3d_comparison} und \cref{tab:results_3d} im Anhang).
 
 \section{Fazit}
 \subsection{Zielerreichung und Projektergebnisse}
