@@ -284,7 +284,31 @@ hochdimensionale Konfigurationsräume
 (siehe \cref{fig:algorithm_comparison} im Anhang).
 
 \subsubsection{Evaluation}
+Die Evaluation erfolgte systematisch über alle Kombinationen aus drei Testumgebungen,
+drei Robotergeometrien und fünf Algorithmen. Als Metriken wurden die Pfadlänge,
+die Anzahl der Wegpunkte und die Rechenzeit erfasst.
 
+Die graphbasierten Algorithmen A* und Dijkstra lieferten in allen Testfällen
+optimale Pfadlängen. Dies bestätigt die theoretische Äquivalenz beider Verfahren bei
+Verwendung einer zulässigen Heuristik. Best-First-Search erreichte die kürzesten
+Rechenzeiten, produzierte jedoch um 10--15\% längere Pfade, da die Optimierung
+zugunsten der Geschwindigkeit vernachlässigt wird.
+
+Bei den samplingbasierten Verfahren zeigte \ac{RRT} eine hohe Zuverlässigkeit und fand
+in allen Testfällen einen Pfad. Die resultierenden Pfade waren jedoch 15--20\% länger
+als die optimalen Lösungen, was dem explorativen Charakter des Algorithmus entspricht.
+\ac{PRM} lieferte in einfachen Umgebungen effiziente Pfade mit wenigen Wegpunkte,
+scheiterte jedoch in der \textit{hard}-Umgebung bei rechteckiger und dreieckiger
+Robotergeometrie. Die zufällige Verteilung der Samples konnte in diesen Fällen keine
+durchgängige Verbindung durch die engen Korridore herstellen
+(siehe \cref{fig:comparison_hard} im Anhang).
+
+Die Rechenzeiten stiegen erwartungsgemäß mit der Umgebungskomplexität. Während
+alle Algorithmen in der \textit{easy}-Umgebung unter 0,1 Sekunden benötigten,
+erreichte \ac{RRT} in der \textit{hard}-Umgebung Rechenzeiten von bis zu 0,5 Sekunden.
+Die Robotergeometrie hatte hingegen nur minimalen Einfluss auf die Performance,
+da die Kollisionsprüfung durch den vorberechneten Konfigurationsraum effizient erfolgt
+(siehe \cref{tab:results_2d} im Anhang).
 
 \subsection{3D}
 \subsubsection{Umgebungsmodellierung}
@@ -344,5 +368,41 @@ Der vollständige Quellcode ist im GitHub-Repository verfügbar: \url{https://gi
     \caption{Vergleich der Pfadplanungsalgorithmen: Unterschiedliche Strategien führen zu verschiedenen Pfadverläufen}
     \label{fig:algorithm_comparison}
 \end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{../figures/comparison_hard.png}
+    \caption{Evaluationsergebnisse in der \textit{hard}-Umgebung: PRM scheitert bei rechteckiger und dreieckiger Robotergeometrie (rechte Spalte, mittlere und untere Zeile)}
+    \label{fig:comparison_hard}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Evaluationsergebnisse der 2D-Pfadplanung (kreisförmiger Roboter)}
+\label{tab:results_2d}
+\begin{tabular}{llrrr}
+\toprule
+Umgebung & Algorithmus & Pfadlänge [m] & Wegpunkte & Zeit [s] \\
+\midrule
+easy & A* & 23,65 & 67 & 0,010 \\
+easy & Dijkstra & 23,65 & 67 & 0,017 \\
+easy & Best-First & 24,60 & 71 & 0,004 \\
+easy & RRT & 28,18 & 58 & 0,018 \\
+easy & PRM & 23,31 & 21 & 0,106 \\
+\midrule
+medium & A* & 41,72 & 121 & 0,020 \\
+medium & Dijkstra & 41,72 & 121 & 0,019 \\
+medium & Best-First & 50,69 & 148 & 0,010 \\
+medium & RRT & 51,00 & 104 & 0,125 \\
+medium & PRM & 45,88 & 25 & 0,067 \\
+\midrule
+hard & A* & 53,12 & 164 & 0,022 \\
+hard & Dijkstra & 53,12 & 164 & 0,023 \\
+hard & Best-First & 58,80 & 185 & 0,012 \\
+hard & RRT & 62,02 & 126 & 0,414 \\
+hard & PRM & 55,04 & 22 & 0,045 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \end{document}
