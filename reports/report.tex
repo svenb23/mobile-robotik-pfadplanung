@@ -259,9 +259,9 @@ die pathfinding-Bibliothek. A* bewertet jeden Knoten nach der Summe $f(n) = g(n)
 wobei $g(n)$ die tatsächlichen Kosten vom Start und $h(n)$ eine heuristische Schätzung zum
 Ziel darstellt. Der Algorithmus expandiert stets den Knoten mit dem niedrigsten $f$-Wert
 und findet garantiert den kürzesten Pfad bei zulässiger Heuristik
-\parencite[vgl.][S. 312--314]{lynch2017modern}. Dijkstra ist ein Spezialfall von A* mit
+\parencite[S. 312--314]{lynch2017modern}. Dijkstra ist ein Spezialfall von A* mit
 $h(n) = 0$ und expandiert Knoten ausschließlich nach ihren bisherigen Kosten $g(n)$
-\parencite[vgl.][S. 314]{lynch2017modern}. Dies liefert ebenfalls optimale Pfade, exploriert
+\parencite[S. 314]{lynch2017modern}. Dies liefert ebenfalls optimale Pfade, exploriert
 jedoch mehr Knoten, da keine Richtungsinformation zum Ziel genutzt wird. Best-First-Search
 verwendet ausschließlich die Heuristik $h(n)$ und ignoriert die bisherigen Kosten. Dadurch
 findet der Algorithmus schnell einen Pfad zum Ziel, dieser ist jedoch nicht zwangsläufig
@@ -273,11 +273,11 @@ kontinuierlichen Raum. \ac{RRT} baut einen Baum ausgehend vom Startpunkt auf. In
 Iteration wird ein zufälliger Punkt im Raum gesampelt, der nächste Knoten im Baum bestimmt
 und ein neuer Knoten in Richtung des Samples mit einer festen Schrittweite (0,5 Meter)
 hinzugefügt. Eine Zielgewichtung von 10\% sorgt dafür, dass der Baum gezielt zum Ziel wächst
-\parencite[vgl.][S. 324--325]{lynch2017modern}. \ac{PRM} arbeitet in zwei Phasen: Zunächst
+\parencite[S. 324--325]{lynch2017modern}. \ac{PRM} arbeitet in zwei Phasen: Zunächst
 werden 500 zufällige, kollisionsfreie Punkte im Raum verteilt. Anschließend wird jeder Punkt
 mit seinen 10 nächsten Nachbarn verbunden, sofern die Verbindung kollisionsfrei ist. Die
 Pfadsuche erfolgt mittels A* auf diesem vorberechneten Graphen
-\parencite[vgl.][S. 328--330]{lynch2017modern}. Beide Verfahren sind probabilistisch
+\parencite[S. 328--330]{lynch2017modern}. Beide Verfahren sind probabilistisch
 vollständig: Mit zunehmender Anzahl an Samples konvergiert die Wahrscheinlichkeit,
 eine existierende Lösung zu finden, gegen eins. Sie eignen sich besonders für
 hochdimensionale Konfigurationsräume
@@ -360,7 +360,7 @@ deutlich mehr Rechenzeit und lieferte einen längeren Pfad von 79,3 Metern.
 zwischen Pfadqualität und Rechenzeit.
 
 Obwohl samplingbasierte Verfahren theoretisch besser mit höheren Dimensionen
-skalieren \parencite[vgl.][S. 1]{petrovic2018motion}, zeigt sich dieser Vorteil
+skalieren \parencite[S. 1]{petrovic2018motion}, zeigt sich dieser Vorteil
 bei nur drei Dimensionen noch nicht deutlich.
 Die graphbasierten Verfahren profitieren hier von der noch handhabbaren Gittergröße.
 In strukturierten Umgebungen mit engen Korridoren haben samplingbasierte Verfahren
@@ -400,6 +400,29 @@ Reale Einsatzszenarien umfassen dynamische Hindernisse, Unsicherheiten in der
 Lokalisierung und Sensorrauschen, die in dieser Arbeit nicht berücksichtigt wurden.
 
 \subsection{Verbesserungspotenziale und Optimierungsansätze}
+Die Pfadqualität könnte durch Nachbearbeitung verbessert werden. Pfadglättungsalgorithmen
+würden die kantigen Trajektorien der gitterbasierten Verfahren in fahrbare Kurven
+umwandeln. Für die samplingbasierten Verfahren existieren Varianten wie RRT* und
+PRM*, die asymptotisch optimale Pfade garantieren
+\parencite[S. 1]{karaman2011sampling}.
+
+Die Rechenzeit ließe sich durch adaptive Auflösung reduzieren. In freien Bereichen
+genügt eine grobe Diskretisierung, während in der Nähe von Hindernissen eine
+feinere Auflösung sinnvoll wäre. Hierarchische Ansätze könnten zunächst auf
+grobem Gitter planen und nur relevante Bereiche verfeinern.
+
+Eine Erweiterung auf höherdimensionale Konfigurationsräume wäre ebenfalls denkbar.
+Roboterarme mit sechs oder mehr Freiheitsgraden erfordern entsprechend viele
+Dimensionen. In solchen Szenarien würden die samplingbasierten Verfahren ihre
+Stärken gegenüber gitterbasierten Methoden deutlicher ausspielen können.
+
+Neben den implementierten Algorithmen existieren weitere Ansätze, die das System
+ergänzen könnten. Die Potentialfeld-Methode modelliert das Ziel als anziehende
+und Hindernisse als abstoßende Kräfte, wodurch der Roboter entlang des
+Gradientenabstiegs zum Ziel navigiert. Trajektorienoptimierungsverfahren wie
+CHOMP \parencite{ratliff2009chomp} oder TrajOpt \parencite{schulman2014trajopt} könnten 
+die gefundenen Pfade hinsichtlich Glätte und Energieeffizienz nachoptimieren.
+
 \subsection{Ausblick}
 
 \section*{Projektrepository}
