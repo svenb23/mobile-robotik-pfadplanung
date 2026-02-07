@@ -424,6 +424,23 @@ CHOMP \parencite{ratliff2009chomp} oder TrajOpt \parencite{schulman2014trajopt} 
 die gefundenen Pfade hinsichtlich Glätte und Energieeffizienz nachoptimieren.
 
 \subsection{Ausblick}
+Für einen produktiven Einsatz des entwickelten Systems wären weitere Entwicklungsschritte
+erforderlich. Die Integration mit realer Sensorik, insbesondere LIDAR und Kamerasystemen,
+würde eine dynamische Aktualisierung der Umgebungskarte ermöglichen. Dadurch könnte
+der Roboter auf unvorhergesehene Hindernisse reagieren und seine Pfade in Echtzeit
+anpassen.
+
+Ein weiterer wichtiger Aspekt ist die Koordination mehrerer Roboter in derselben
+Umgebung. In modernen Lagerhäusern operieren häufig Flotten von AMR gleichzeitig,
+was eine kollisionsfreie Pfadplanung unter Berücksichtigung der anderen Roboter
+erfordert. Hierfür existieren dezentrale und zentrale Ansätze, die auf den
+implementierten Einzelroboter-Algorithmen aufbauen könnten.
+
+Schließlich bieten maschinelle Lernverfahren vielversprechende Möglichkeiten zur
+Beschleunigung der Pfadplanung. Neuronale Netze könnten trainiert werden, um
+gute Initiallösungen für die Optimierung zu liefern oder die Heuristik von A*
+zu verbessern. Solche hybriden Ansätze kombinieren die Zuverlässigkeit klassischer
+Algorithmen mit der Effizienz datengetriebener Methoden.
 
 \section*{Projektrepository}
 \addcontentsline{toc}{section}{Projektrepository}
