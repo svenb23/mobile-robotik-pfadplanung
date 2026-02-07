@@ -384,6 +384,21 @@ zeigten ihre Eignung für komplexere Szenarien, offenbarten jedoch Schwächen in
 Umgebungen mit engen Korridoren.
 
 \subsection{Kritische Reflexion}
+Die gewählte Diskretisierung des Konfigurationsraums stellt einen Kompromiss dar.
+Eine feinere Auflösung würde präzisere Pfade ermöglichen, erhöht jedoch den
+Speicherbedarf und die Rechenzeit erheblich. Besonders im 3D-Fall mit zwölf
+Winkelschritten ist die Auflösung relativ grob, was zu suboptimalen Pfaden
+führen kann.
+
+Die Evaluation basiert auf einzelnen Durchläufen pro Konfiguration. Da RRT und
+PRM auf Zufallszahlen basieren, können die Ergebnisse bei wiederholter Ausführung
+variieren. Eine statistisch robustere Evaluation würde Mehrfachdurchläufe mit
+Mittelwertbildung erfordern.
+
+Die Testumgebungen sind statisch und repräsentieren idealisierte Lagerhallen.
+Reale Einsatzszenarien umfassen dynamische Hindernisse, Unsicherheiten in der
+Lokalisierung und Sensorrauschen, die in dieser Arbeit nicht berücksichtigt wurden.
+
 \subsection{Verbesserungspotenziale und Optimierungsansätze}
 \subsection{Ausblick}
 
