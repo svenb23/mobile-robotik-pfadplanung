@@ -239,7 +239,7 @@ Robotergeometrie erweitert, sodass eine Kollisionsprüfung nur noch für den Ref
 des Roboters erforderlich ist.
 
 Die Berechnung erfolgt durch Diskretisierung des Arbeitsraums in ein gleichmäßiges Gitter
-mit konfigurierbarer Auflösung (Standard: 0,5 Meter). Für jede Gitterzelle wird das
+mit konfigurierbarer Auflösung (für die 2D-Evaluation: 0,3 Meter). Für jede Gitterzelle wird das
 Roboterpolygon an der entsprechenden Position platziert und mittels der Shapely-Bibliothek
 \parencite{shapely2024} auf Überschneidungen mit den Hindernissen geprüft. Zusätzlich wird sichergestellt, dass
 der Roboter vollständig innerhalb der Umgebungsgrenzen liegt. Das Ergebnis ist ein
@@ -379,7 +379,7 @@ Die systematische Evaluation von fünf Algorithmen auf drei Testumgebungen mit
 unterschiedlichen Robotergeometrien lieferte quantitative Erkenntnisse über die
 Stärken und Schwächen der verschiedenen Ansätze. A* und Dijkstra erwiesen sich
 als zuverlässige Verfahren für optimale Pfade, während Best-First-Search bei
-Zeitkritikalität Vorteile bietet. Die samplingbasierten Verfahren RRT und PRM
+Zeitkritikalität Vorteile bietet. Die samplingbasierten Verfahren \ac{RRT} und \ac{PRM}
 zeigten ihre Eignung für komplexere Szenarien, offenbarten jedoch Schwächen in
 Umgebungen mit engen Korridoren.
 
@@ -431,7 +431,7 @@ der Roboter auf unvorhergesehene Hindernisse reagieren und seine Pfade in Echtze
 anpassen.
 
 Ein weiterer wichtiger Aspekt ist die Koordination mehrerer Roboter in derselben
-Umgebung. In modernen Lagerhäusern operieren häufig Flotten von AMR gleichzeitig,
+Umgebung. In modernen Lagerhäusern operieren häufig Flotten von \ac{AMR} gleichzeitig,
 was eine kollisionsfreie Pfadplanung unter Berücksichtigung der anderen Roboter
 erfordert. Hierfür existieren dezentrale und zentrale Ansätze, die auf den
 implementierten Einzelroboter-Algorithmen aufbauen könnten.
@@ -545,5 +545,595 @@ PRM & 72,70 & -- & 0,22 \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\newpage
+\section*{Quellcode}
+\addcontentsline{toc}{section}{Quellcode}
+
+\subsection*{robot.py -- Robotergeometrie}
+\begin{lstlisting}[language=Python]
+import numpy as np
+from shapely.geometry import Polygon
+from typing import List, Tuple
+
+class Robot:
+    """Robot geometry defined by polygon vertices centered at origin."""
+
+    def __init__(self, vertices: List[Tuple[float, float]]):
+        self.vertices = vertices
+        self.polygon = Polygon(vertices)
+
+    def at(self, x: float, y: float, theta: float = 0) -> Polygon:
+        """Return robot polygon at position (x,y) with rotation theta."""
+        if theta == 0:
+            transformed = [(vx + x, vy + y) for vx, vy in self.vertices]
+        else:
+            cos_t, sin_t = np.cos(theta), np.sin(theta)
+            transformed = [
+                (vx * cos_t - vy * sin_t + x, vx * sin_t + vy * cos_t + y)
+                for vx, vy in self.vertices
+            ]
+        return Polygon(transformed)
+
+    @classmethod
+    def rectangle(cls, width: float, height: float) -> 'Robot':
+        w, h = width / 2, height / 2
+        return cls([(-w, -h), (w, -h), (w, h), (-w, h)])
+
+    @classmethod
+    def circle(cls, radius: float, n_points: int = 16) -> 'Robot':
+        angles = np.linspace(0, 2 * np.pi, n_points, endpoint=False)
+        vertices = [(radius * np.cos(a), radius * np.sin(a)) for a in angles]
+        return cls(vertices)
+
+    @classmethod
+    def triangle(cls, base: float, height: float) -> 'Robot':
+        return cls([
+            (height / 2, 0),
+            (-height / 2, -base / 2),
+            (-height / 2, base / 2),
+        ])
+\end{lstlisting}
+
+\subsection*{warehouse.py -- Lagerumgebung}
+\begin{lstlisting}[language=Python]
+import matplotlib.pyplot as plt
+from matplotlib.patches import Polygon as MplPolygon
+from shapely.geometry import Polygon, Point
+from typing import List, Tuple
+
+class Warehouse:
+    """Warehouse environment with polygon obstacles."""
+
+    def __init__(self, width: float, height: float):
+        self.width = width
+        self.height = height
+        self.obstacles: List[Tuple[Polygon, List, str]] = []
+
+    def add(self, vertices: List[Tuple[float, float]], name: str = "") -> None:
+        polygon = Polygon(vertices)
+        self.obstacles.append((polygon, vertices, name))
+
+    def is_free(self, point: Tuple[float, float]) -> bool:
+        x, y = point
+        if not (0 < x < self.width and 0 < y < self.height):
+            return False
+        for polygon, _, _ in self.obstacles:
+            if polygon.contains(Point(point)):
+                return False
+        return True
+
+    def get_polygons(self) -> List[Polygon]:
+        return [polygon for polygon, _, _ in self.obstacles]
+\end{lstlisting}
+
+\subsection*{cspace.py -- 2D-Konfigurationsraum}
+\begin{lstlisting}[language=Python]
+import numpy as np
+from shapely.geometry import Polygon
+from typing import Tuple
+
+class CSpace:
+    """2D Configuration space (x, y) for omnidirectional robots."""
+
+    def __init__(self, warehouse, robot, resolution: float = 0.5):
+        self.warehouse = warehouse
+        self.robot = robot
+        self.resolution = resolution
+        self.cols = int(warehouse.width / resolution)
+        self.rows = int(warehouse.height / resolution)
+        self.grid = np.zeros((self.rows, self.cols), dtype=bool)
+        self._compute()
+
+    def _compute(self):
+        obstacles = self.warehouse.get_polygons()
+        for row in range(self.rows):
+            for col in range(self.cols):
+                x = (col + 0.5) * self.resolution
+                y = (row + 0.5) * self.resolution
+                robot_poly = self.robot.at(x, y)
+                if not self._inside_bounds(robot_poly):
+                    self.grid[row, col] = True
+                    continue
+                for obs in obstacles:
+                    if robot_poly.intersects(obs):
+                        self.grid[row, col] = True
+                        break
+
+    def _inside_bounds(self, polygon: Polygon) -> bool:
+        minx, miny, maxx, maxy = polygon.bounds
+        return minx >= 0 and miny >= 0 and \
+               maxx <= self.warehouse.width and maxy <= self.warehouse.height
+
+    def is_free(self, x: float, y: float) -> bool:
+        col = int(x / self.resolution)
+        row = int(y / self.resolution)
+        if 0 <= row < self.rows and 0 <= col < self.cols:
+            return not self.grid[row, col]
+        return False
+\end{lstlisting}
+
+\subsection*{pathfinder.py -- Pfadplanungsalgorithmen (Auszug)}
+\begin{lstlisting}[language=Python]
+import numpy as np
+from pathfinding.core.grid import Grid
+from pathfinding.core.diagonal_movement import DiagonalMovement
+from pathfinding.finder.a_star import AStarFinder
+from pathfinding.finder.dijkstra import DijkstraFinder
+from pathfinding.finder.best_first import BestFirst
+from typing import List, Tuple, Optional
+import random
+
+class Pathfinder:
+    """2D Pathfinding on CSpace grid with multiple algorithms."""
+
+    def __init__(self, cspace, algorithm: str = "a_star"):
+        self.cspace = cspace
+        self.algorithm = algorithm
+        self._init_finder()
+
+    def _find_rrt(self, start, goal, max_iter=5000, step_size=0.5):
+        """RRT (Rapidly-exploring Random Tree) algorithm."""
+        tree = {start: None}
+        for _ in range(max_iter):
+            if random.random() < 0.1:
+                sample = goal
+            else:
+                sample = (random.uniform(0, self.cspace.warehouse.width),
+                          random.uniform(0, self.cspace.warehouse.height))
+            nearest = min(tree.keys(), key=lambda n: self._dist(n, sample))
+            direction = np.array(sample) - np.array(nearest)
+            dist = np.linalg.norm(direction)
+            if dist < 1e-6:
+                continue
+            direction = direction / dist
+            new_point = tuple(np.array(nearest) + direction * min(step_size, dist))
+            if self._line_free(nearest, new_point):
+                tree[new_point] = nearest
+                if self._dist(new_point, goal) < step_size and \
+                   self._line_free(new_point, goal):
+                    tree[goal] = new_point
+                    return self._reconstruct_path(tree, goal)
+        return None
+
+    def _find_prm(self, start, goal, n_samples=500, k_neighbors=10):
+        """PRM (Probabilistic Roadmap) algorithm."""
+        samples = [start, goal]
+        for _ in range(n_samples):
+            point = (random.uniform(0, self.cspace.warehouse.width),
+                     random.uniform(0, self.cspace.warehouse.height))
+            if self.cspace.is_free(point[0], point[1]):
+                samples.append(point)
+        edges = {s: [] for s in samples}
+        for s in samples:
+            neighbors = sorted(samples, key=lambda n: self._dist(s, n))[1:k_neighbors+1]
+            for n in neighbors:
+                if self._line_free(s, n):
+                    edges[s].append(n)
+                    edges[n].append(s)
+        return self._astar_roadmap(start, goal, edges)
+\end{lstlisting}
+
+\subsection*{cspace3d.py -- 3D-Konfigurationsraum}
+\begin{lstlisting}[language=Python]
+import numpy as np
+from shapely.geometry import Polygon
+from typing import Tuple
+
+class CSpace3D:
+    """3D Configuration space (x, y, theta) for non-holonomic robots."""
+
+    def __init__(self, warehouse, robot, resolution: float = 0.5, n_angles: int = 12):
+        self.warehouse = warehouse
+        self.robot = robot
+        self.resolution = resolution
+        self.n_angles = n_angles
+        self.angle_resolution = 2 * np.pi / n_angles
+        self.cols = int(warehouse.width / resolution)
+        self.rows = int(warehouse.height / resolution)
+        self.grid = np.zeros((self.rows, self.cols, n_angles), dtype=bool)
+        self._compute()
+
+    def _compute(self):
+        obstacles = self.warehouse.get_polygons()
+        angles = np.linspace(0, 2 * np.pi, self.n_angles, endpoint=False)
+        for row in range(self.rows):
+            for col in range(self.cols):
+                x = (col + 0.5) * self.resolution
+                y = (row + 0.5) * self.resolution
+                for k, theta in enumerate(angles):
+                    robot_poly = self.robot.at(x, y, theta)
+                    if not self._inside_bounds(robot_poly):
+                        self.grid[row, col, k] = True
+                        continue
+                    for obs in obstacles:
+                        if robot_poly.intersects(obs):
+                            self.grid[row, col, k] = True
+                            break
+
+    def is_free(self, x: float, y: float, theta: float) -> bool:
+        col = int(x / self.resolution)
+        row = int(y / self.resolution)
+        k = int((theta % (2 * np.pi)) / self.angle_resolution) % self.n_angles
+        if 0 <= row < self.rows and 0 <= col < self.cols:
+            return not self.grid[row, col, k]
+        return False
+\end{lstlisting}
+
+\subsection*{pathfinder3d.py -- A* für 3D-Konfigurationsraum}
+\begin{lstlisting}[language=Python]
+import numpy as np
+from typing import List, Tuple, Optional
+import heapq
+
+class Pathfinder3D:
+    """A* pathfinding in 3D configuration space."""
+
+    def __init__(self, cspace3d):
+        self.cspace = cspace3d
+
+    def find(self, start, goal) -> Optional[List[Tuple[float, float, float]]]:
+        start_cell = self.cspace.to_grid(*start)
+        goal_cell = self.cspace.to_grid(*goal)
+        if self.cspace.grid[start_cell] or self.cspace.grid[goal_cell]:
+            return None
+        open_set = [(0, start_cell)]
+        came_from = {}
+        g_score = {start_cell: 0}
+        neighbors_xy = [(-1,-1),(-1,0),(-1,1),(0,-1),(0,1),(1,-1),(1,0),(1,1),(0,0)]
+        neighbors_theta = [-1, 0, 1]
+
+        while open_set:
+            _, current = heapq.heappop(open_set)
+            if current == goal_cell:
+                path = [current]
+                while current in came_from:
+                    current = came_from[current]
+                    path.append(current)
+                return [self.cspace.to_world(*cell) for cell in path[::-1]]
+            row, col, k = current
+            for dr, dc in neighbors_xy:
+                for dk in neighbors_theta:
+                    if dr == 0 and dc == 0 and dk == 0:
+                        continue
+                    nr, nc = row + dr, col + dc
+                    nk = (k + dk) % self.cspace.n_angles
+                    if not (0 <= nr < self.cspace.rows and 0 <= nc < self.cspace.cols):
+                        continue
+                    if self.cspace.grid[nr, nc, nk]:
+                        continue
+                    neighbor = (nr, nc, nk)
+                    spatial_dist = np.sqrt(dr**2 + dc**2) * self.cspace.resolution
+                    rotation_cost = abs(dk) * self.cspace.angle_resolution * 0.5
+                    tentative_g = g_score[current] + spatial_dist + rotation_cost
+                    if neighbor not in g_score or tentative_g < g_score[neighbor]:
+                        came_from[neighbor] = current
+                        g_score[neighbor] = tentative_g
+                        h = np.sqrt((nr-goal_cell[0])**2 + (nc-goal_cell[1])**2) * \
+                            self.cspace.resolution
+                        heapq.heappush(open_set, (tentative_g + h, neighbor))
+        return None
+\end{lstlisting}
+
+\subsection*{pathfinder3d\_dijkstra.py -- Dijkstra für 3D-Konfigurationsraum}
+\begin{lstlisting}[language=Python]
+import numpy as np
+from typing import List, Tuple, Optional
+import heapq
+
+class Pathfinder3D_Dijkstra:
+    """Dijkstra pathfinding in 3D configuration space."""
+
+    def __init__(self, cspace3d):
+        self.cspace = cspace3d
+
+    def find(self, start: Tuple[float, float, float],
+             goal: Tuple[float, float, float]) -> Optional[List[Tuple[float, float, float]]]:
+        """Find optimal path from start to goal using Dijkstra (no heuristic)."""
+        start_cell = self.cspace.to_grid(*start)
+        goal_cell = self.cspace.to_grid(*goal)
+
+        if self.cspace.grid[start_cell] or self.cspace.grid[goal_cell]:
+            return None
+
+        open_set = [(0, start_cell)]
+        came_from = {}
+        g_score = {start_cell: 0}
+
+        # 8-connectivity in xy + 3 options for theta
+        neighbors_xy = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1), (0, 0)]
+        neighbors_theta = [-1, 0, 1]
+
+        while open_set:
+            current_g, current = heapq.heappop(open_set)
+
+            if current == goal_cell:
+                # Reconstruct path
+                path = [current]
+                while current in came_from:
+                    current = came_from[current]
+                    path.append(current)
+                return [self.cspace.to_world(*cell) for cell in path[::-1]]
+
+            if current_g > g_score.get(current, float('inf')):
+                continue
+
+            row, col, k = current
+
+            for dr, dc in neighbors_xy:
+                for dk in neighbors_theta:
+                    if dr == 0 and dc == 0 and dk == 0:
+                        continue
+
+                    nr = row + dr
+                    nc = col + dc
+                    nk = (k + dk) % self.cspace.n_angles
+
+                    if not (0 <= nr < self.cspace.rows and 0 <= nc < self.cspace.cols):
+                        continue
+                    if self.cspace.grid[nr, nc, nk]:
+                        continue
+
+                    neighbor = (nr, nc, nk)
+                    # Cost = spatial distance + rotation cost
+                    spatial_dist = np.sqrt(dr**2 + dc**2) * self.cspace.resolution
+                    rotation_cost = abs(dk) * self.cspace.angle_resolution * 0.5
+                    tentative_g = g_score[current] + spatial_dist + rotation_cost
+
+                    if neighbor not in g_score or tentative_g < g_score[neighbor]:
+                        came_from[neighbor] = current
+                        g_score[neighbor] = tentative_g
+                        heapq.heappush(open_set, (tentative_g, neighbor))
+
+        return None
+\end{lstlisting}
+
+\subsection*{pathfinder3d\_rrt.py -- RRT für 3D-Konfigurationsraum}
+\begin{lstlisting}[language=Python]
+import numpy as np
+from typing import List, Tuple, Optional
+import random
+
+class Pathfinder3D_RRT:
+    """RRT (Rapidly-exploring Random Tree) in 3D configuration space."""
+
+    def __init__(self, cspace3d):
+        self.cspace = cspace3d
+
+    def find(self, start: Tuple[float, float, float],
+             goal: Tuple[float, float, float],
+             max_iter: int = 10000, step_size: float = 0.5,
+             angle_step: float = 0.3) -> Optional[List[Tuple[float, float, float]]]:
+        """Find path using RRT algorithm."""
+        tree = {start: None}
+
+        for _ in range(max_iter):
+            # Sample random point (10% bias towards goal)
+            if random.random() < 0.1:
+                sample = goal
+            else:
+                sample = (
+                    random.uniform(0, self.cspace.warehouse.width),
+                    random.uniform(0, self.cspace.warehouse.height),
+                    random.uniform(0, 2 * np.pi)
+                )
+
+            # Find nearest node in tree
+            nearest = min(tree.keys(), key=lambda n: self._dist(n, sample))
+
+            # Steer towards sample
+            direction = np.array(sample[:2]) - np.array(nearest[:2])
+            dist = np.linalg.norm(direction)
+            if dist < 1e-6:
+                new_x, new_y = nearest[0], nearest[1]
+            else:
+                direction = direction / dist
+                new_pos = np.array(nearest[:2]) + direction * min(step_size, dist)
+                new_x, new_y = new_pos[0], new_pos[1]
+
+            # Interpolate angle
+            angle_diff = sample[2] - nearest[2]
+            angle_diff = (angle_diff + np.pi) % (2 * np.pi) - np.pi
+            new_theta = nearest[2] + np.sign(angle_diff) * min(abs(angle_diff), angle_step)
+            new_theta = new_theta % (2 * np.pi)
+
+            new_point = (new_x, new_y, new_theta)
+
+            # Add to tree if path is collision-free
+            if self._line_free(nearest, new_point):
+                tree[new_point] = nearest
+
+                # Check if goal is reachable
+                if self._dist(new_point, goal) < step_size:
+                    if self._line_free(new_point, goal):
+                        tree[goal] = new_point
+                        return self._reconstruct(tree, goal)
+
+        return None
+
+    def _dist(self, a, b):
+        """Distance metric combining spatial and angular distance."""
+        spatial = np.sqrt((a[0] - b[0])**2 + (a[1] - b[1])**2)
+        angle_diff = abs(a[2] - b[2])
+        angle_diff = min(angle_diff, 2 * np.pi - angle_diff)
+        return spatial + angle_diff * 0.5
+
+    def _line_free(self, a, b, steps: int = 10):
+        """Check if straight line between two configurations is collision-free."""
+        for i in range(steps + 1):
+            t = i / steps
+            x = a[0] + t * (b[0] - a[0])
+            y = a[1] + t * (b[1] - a[1])
+            angle_diff = b[2] - a[2]
+            angle_diff = (angle_diff + np.pi) % (2 * np.pi) - np.pi
+            theta = (a[2] + t * angle_diff) % (2 * np.pi)
+            if not self.cspace.is_free(x, y, theta):
+                return False
+        return True
+
+    def _reconstruct(self, tree, goal):
+        """Reconstruct path from tree."""
+        path = [goal]
+        current = goal
+        while tree[current] is not None:
+            current = tree[current]
+            path.append(current)
+        return path[::-1]
+\end{lstlisting}
+
+\subsection*{pathfinder3d\_prm.py -- PRM für 3D-Konfigurationsraum}
+\begin{lstlisting}[language=Python]
+import numpy as np
+from typing import List, Tuple, Optional
+import random
+import heapq
+
+class Pathfinder3D_PRM:
+    """PRM (Probabilistic Roadmap) in 3D configuration space."""
+
+    def __init__(self, cspace3d):
+        self.cspace = cspace3d
+
+    def find(self, start: Tuple[float, float, float],
+             goal: Tuple[float, float, float],
+             n_samples: int = 1000, k_neighbors: int = 15) -> Optional[List[Tuple[float, float, float]]]:
+        """Find path using PRM algorithm."""
+        # Sample random collision-free configurations
+        samples = [start, goal]
+        for _ in range(n_samples):
+            point = (
+                random.uniform(0, self.cspace.warehouse.width),
+                random.uniform(0, self.cspace.warehouse.height),
+                random.uniform(0, 2 * np.pi)
+            )
+            if self.cspace.is_free(*point):
+                samples.append(point)
+
+        # Build roadmap by connecting k-nearest neighbors
+        edges = {s: [] for s in samples}
+        for s in samples:
+            neighbors = sorted(samples, key=lambda n: self._dist(s, n))[1:k_neighbors+1]
+            for n in neighbors:
+                if self._line_free(s, n):
+                    edges[s].append(n)
+                    edges[n].append(s)
+
+        # Search roadmap using A*
+        return self._astar(start, goal, edges)
+
+    def _astar(self, start, goal, edges):
+        """A* search on the roadmap."""
+        open_set = [(0, start)]
+        came_from = {}
+        g_score = {start: 0}
+
+        while open_set:
+            _, current = heapq.heappop(open_set)
+
+            if current == goal:
+                path = [current]
+                while current in came_from:
+                    current = came_from[current]
+                    path.append(current)
+                return path[::-1]
+
+            for neighbor in edges.get(current, []):
+                tentative_g = g_score[current] + self._dist(current, neighbor)
+                if neighbor not in g_score or tentative_g < g_score[neighbor]:
+                    came_from[neighbor] = current
+                    g_score[neighbor] = tentative_g
+                    f = tentative_g + self._dist(neighbor, goal)
+                    heapq.heappush(open_set, (f, neighbor))
+
+        return None
+
+    def _dist(self, a, b):
+        """Distance metric combining spatial and angular distance."""
+        spatial = np.sqrt((a[0] - b[0])**2 + (a[1] - b[1])**2)
+        angle_diff = abs(a[2] - b[2])
+        angle_diff = min(angle_diff, 2 * np.pi - angle_diff)
+        return spatial + angle_diff * 0.5
+
+    def _line_free(self, a, b, steps: int = 10):
+        """Check if straight line between two configurations is collision-free."""
+        for i in range(steps + 1):
+            t = i / steps
+            x = a[0] + t * (b[0] - a[0])
+            y = a[1] + t * (b[1] - a[1])
+            angle_diff = b[2] - a[2]
+            angle_diff = (angle_diff + np.pi) % (2 * np.pi) - np.pi
+            theta = (a[2] + t * angle_diff) % (2 * np.pi)
+            if not self.cspace.is_free(x, y, theta):
+                return False
+        return True
+\end{lstlisting}
+
+\subsection*{maps.py -- Kartendefinitionen}
+\begin{lstlisting}[language=Python]
+MAPS = {
+    "easy": {
+        "width": 20,
+        "height": 15,
+        "obstacles": [
+            [(3, 3), (7, 3), (7, 5), (3, 5)],
+            [(12, 8), (16, 8), (16, 11), (12, 11)],
+        ]
+    },
+
+    "medium": {
+        "width": 25,
+        "height": 20,
+        "obstacles": [
+            [(4, 0), (6, 0), (6, 12), (4, 12)],
+            [(4, 16), (6, 16), (6, 20), (4, 20)],
+            [(10, 8), (12, 8), (12, 20), (10, 20)],
+            [(16, 0), (18, 0), (18, 14), (16, 14)],
+            [(8, 3), (14, 3), (14, 5), (8, 5)],
+            [(18, 10), (23, 10), (23, 12), (18, 12)],
+        ]
+    },
+
+    "hard": {
+        "width": 30,
+        "height": 25,
+        "obstacles": [
+            [(3, 0), (5, 0), (5, 18), (3, 18)],
+            [(3, 18), (12, 18), (12, 20), (3, 20)],
+            [(8, 5), (10, 5), (10, 15), (8, 15)],
+            [(10, 5), (18, 5), (18, 7), (10, 7)],
+            [(13, 10), (15, 10), (15, 20), (13, 20)],
+            [(15, 12), (22, 12), (22, 14), (15, 14)],
+            [(20, 0), (22, 0), (22, 10), (20, 10)],
+            [(20, 16), (22, 16), (22, 25), (20, 25)],
+            [(24, 5), (28, 5), (28, 7), (24, 7)],
+            [(24, 7), (26, 7), (26, 25), (24, 25)],
+            [(12, 0), (14, 0), (14, 3), (12, 3)],
+            [(5, 8), (7, 8), (7, 12), (5, 12)],
+            [(5, 12), (8, 12), (8, 14), (5, 14)],
+            [(26, 20), (30, 20), (30, 22), (26, 22)],
+        ]
+    },
+}
+\end{lstlisting}
 
 \end{document}
